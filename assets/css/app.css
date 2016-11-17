@@ -1,0 +1,32 @@
+/*
+Bright: #FF6600
+Dark: #C13B00
+Light Gray: #5E6D70
+Gray: #424E4F
+Dark Gray: #1B1D1E
+*/
+
+* {
+  margin: 0;
+}
+html, body {
+  height: 100%;
+  background-color: #5E6D70;
+  color: #FFFFFF;
+}
+#wrapper {
+  min-height: 100%;
+  margin-bottom: -40px;
+}
+#wrapper:after {
+  content: "";
+  display: block;
+}
+#footer, #wrapper:after {
+  height: 40px;
+}
+#footer {
+  text-align: center;
+  background: #1B1D1E;
+  color: #FF6600;
+}
