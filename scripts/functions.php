@@ -27,4 +27,15 @@ function login($username, $pass){
 }
 */
 
+/*
+    sanitizes input data to prevent injection
+    use with $dbh->quote(data) if using directly in a SQL call
+*/
+function testInput($data) {
+    $data = trim($data);
+    $data = stripslashes($data);
+    $data = htmlspecialchars($data);
+    return $data;
+}
+
 ?>
