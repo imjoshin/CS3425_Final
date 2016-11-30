@@ -134,7 +134,7 @@ function get_questions($exam_name){
       //get answer information
       $stmt = db_op("SELECT student_answers.s_id, student_answers.q_id, student_answers.a_id, Answer.identifier
                      FROM student_answers join Answer on student_answers.a_id = Answer.id
-                     WHERE student_answers.q_id = '" . $qrow["id"] . "'");
+                     WHERE student_answers.q_id = '" . $qrow["id"] . "' AND student_answers.s_id = '" . $_SESSION["user"] . "'");
       $row = $stmt->fetch_array(MYSQLI_ASSOC);
       $student_correct = ($qrow["correct_answer"] == $row["identifier"]);
 
