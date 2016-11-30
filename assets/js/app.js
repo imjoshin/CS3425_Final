@@ -67,7 +67,7 @@ $(document).on("ready", function(){
     });
   });
 
-  $(document).on("click", "#exam-table tr", function(){
+  $(document).on("click", "#exam-table tr:not(:first-child)", function(){
     var exam_name = $(this).data("exam");
     $.ajax({
       type: "POST",

@@ -38,7 +38,7 @@ h1{
 #exam-table tr{
   transition: .15s;
 }
-#exam-table tr:hover{
+#exam-table tr:not(:first-child):hover{
   cursor: hand;
   background: #bbbbbb;
 }

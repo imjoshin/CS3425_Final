@@ -46,14 +46,20 @@ function get_exams(){
     }
 
     $html .= "<div class='panel panel-default'>
-              <table id='exam-table' class='table'>";
+                <table id='exam-table' class='table'>
+                  <tr>
+                    <th>Exam Name</th>
+                    <th>Instructor</th>
+                    <th>Score</th>
+                    <th>Date Posted</th>
+                  </tr>";
     //add each exam to the table
     while($row = $qstmt->fetch_array(MYSQLI_ASSOC)){
       $date = strtotime($row["date"]);
       $html .= "<tr class='" . ($row["points"] != null ? "closed" : "open") . "' data-exam='" . $row["exam_name"] . "'>
                     <td style='width:30%'>" . $row["exam_name"] . "</td>
                     <td style='width:30%'>" . $row["instructor"] . "</td>
-                    <td style='width:20%'>" . ($row["points"] != null ? $row["points"] : "~") . "/" . $row["total"] . "</td>
+                    <td style='width:20%'>" . ($row["points"] != null ? $row["points"] . "/" . $row["total"] : "Open") . "</td>
                     <td style='width:20%'>" . date("F d, Y", $date) . "</td>
                 </tr>";
     }
