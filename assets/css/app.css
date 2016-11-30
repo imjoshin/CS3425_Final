@@ -20,6 +20,7 @@ h1{
 #wrapper {
   min-height: 100%;
   margin-bottom: -40px;
+  padding: 10px;
 }
 #wrapper:after {
   content: "";
@@ -42,8 +43,18 @@ h1{
   background: #bbbbbb;
 }
 #exam-table tr.open{
-  
+
 }
 #exam-table tr.closed{
 
+}
+
+.question-table tr.question{
+  font-weight: bold;
+}
+.question-table tr.correct{
+  background: #8AFF82;
+}
+.question-table tr.incorrect{
+  background: #FF8282;
 }

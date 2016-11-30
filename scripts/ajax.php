@@ -5,6 +5,9 @@ $action = $_POST["action"];
 if($action == "get_exams"){
   echo get_exams();
 }
+if($action == "get_questions"){
+  echo get_questions($_POST["exam_name"]);
+}
 if($action == "test"){
   echo json_encode(array("test"=>"test"));
 }

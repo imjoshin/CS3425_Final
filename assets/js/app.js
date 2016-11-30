@@ -11,7 +11,7 @@ $(document).on("ready", function(){
       if(data["error"]){
         alert(data["error"]);
       }else{
-        $("#exams").html(data["html"]);
+        $("#content").html(data["html"]);
       }
     },
     error: function(xhr, status, error) {
@@ -34,7 +34,7 @@ $(document).on("ready", function(){
         if(data["error"]){
           alert(data["error"]);
         }else{
-          $("#exams").html(data["html"]);
+          $("#content").html(data["html"]);
           $(".navbar-nav").html("<li><a href='#'>Exams</a></li><li><a id='logout'>Logout</a></li>");
           $("#login-modal").modal("hide");
         }
@@ -67,4 +67,27 @@ $(document).on("ready", function(){
     });
   });
 
+  $(document).on("click", "#exam-table tr", function(){
+    var exam_name = $(this).data("exam");
+    $.ajax({
+      type: "POST",
+      dataType: "json",
+      url: "scripts/ajax.php",
+      data: {
+        action: "get_questions",
+        exam_name: exam_name
+      },
+      cache: false,
+      success: function(data) {
+        if(data["error"]){
+          alert(data["error"]);
+        }else{
+          $("#content").html(data["html"]);
+        }
+      },
+      error: function(xhr, status, error) {
+        alert("An error has occured.");
+      }
+    });
+  });
 });

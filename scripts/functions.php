@@ -9,23 +9,26 @@ date_default_timezone_set("America/Detroit");
 session_start();
 
 function login($user, $pass){
-  $user = preg_replace('/[^\w]/', '', $user);
-  $pass = preg_replace('/[^\w]/', '', $pass);
-  $stmt = db_op("SELECT * FROM Student WHERE id = '$user' AND password = '$pass'");
+  //find student
+  $stmt = db_op("SELECT * FROM Student WHERE id = '" . test_input($user) . "' AND password = '" . test_input($pass) . "'");
   if($stmt->num_rows != 1){
     return json_encode(array("error"=>"Invalid user ID or password."));
   }
+  //if user is found, get exams
   $_SESSION["user"] = $user;
   return get_exams();
 }
 
 function logout(){
+  //simply destroy the session
   session_destroy();
   return json_encode(array());
 }
 
 function get_exams(){
+  //if lgoged in
   if(isset($_SESSION["user"]) && strlen($_SESSION["user"]) > 0){
+    //get exam name, instructor name, date created, points of taken exam, and total points
     $qstmt = db_op("SELECT Exam.name AS exam_name, Instructor.name AS instructor, Exam.date_created AS date, taken.points AS points, total.points AS total
                     FROM Exam
                     JOIN Instructor ON Exam.created_by = Instructor.id
@@ -41,18 +44,19 @@ function get_exams(){
 
     $html = "<div class='panel panel-default'>
               <table id='exam-table' class='table'>";
+    //add each exam to the table
     while($row = $qstmt->fetch_array(MYSQLI_ASSOC)){
       $date = strtotime($row["date"]);
-      $html .= "<tr class='" . ($row["points"] != null ? "closed" : "open") . "'>
+      $html .= "<tr class='" . ($row["points"] != null ? "closed" : "open") . "' data-exam='" . $row["exam_name"] . "'>
                     <td style='width:30%'>" . $row["exam_name"] . "</td>
                     <td style='width:30%'>" . $row["instructor"] . "</td>
                     <td style='width:20%'>" . ($row["points"] != null ? $row["points"] : "~") . "/" . $row["total"] . "</td>
                     <td style='width:20%'>" . date("F d, Y", $date) . "</td>
                 </tr>";
     }
-
     $html .= "</table></div>";
   }else{
+    //not logged in
     $html = "<h3>You are not logged in!<br/>Please <a href='#login-modal' data-toggle='modal'>login</a> now.</h3>";
   }
 
@@ -60,19 +64,80 @@ function get_exams(){
 }
 
 function get_questions($exam_name){
-  $qstmt = db_op("SELECT number, text, points FROM Question WHERE exam_name = '" . test_input($exam_name) . "' ORDER BY number ASC;");
-  if(!$qstmt){
-    return json_encode(array("error"=>"Unable to access database."));
-  }
 
+
+  $stmt = db_op("SELECT * FROM takes WHERE s_id = '" . $_SESSION["user"] . "' AND exam_name = '$exam_name'");
   $html = "";
-  while($qrow = $qstmt->fetch_array(MYSQLI_ASSOC)){
-    $astmt = db_op("SELECT Answer.identifier, Answer.text FROM Answer JOIN Question ON Answer.q_id = Question.id WHERE Question.exam_name = '" . test_input($exam_name) . "' AND Answer.q_id = " . $qrow["number"] . " ORDER BY identifier ASC;");
-    $html .= $qrow["number"] . " " . $qrow["text"] . "<br/>";
-    while($arow = $qstmt->fetch_array(MYSQLI_ASSOC)){
-      $html .= $arow["identifier"] . " " . $arow["text"] . "<br/>";
+
+  //exam not taken
+  if($stmt->num_rows != 1){
+    //get all questions for this exam
+    $qstmt = db_op("SELECT id, number, text, points FROM Question WHERE exam_name = '" . test_input($exam_name) . "' ORDER BY number ASC;");
+    if(!$qstmt){
+      return json_encode(array("error"=>"Unable to access database."));
+    }
+
+    //generate html for questions/answers
+    while($qrow = $qstmt->fetch_array(MYSQLI_ASSOC)){
+      $html .= "<div class='panel panel-default'>
+                  <table class='question-table table'>";
+      $html .= "<tr class='question'>
+                  <td>" . $qrow["number"] . ". " . $qrow["text"] . "<label style='float:right'>" . $qrow["points"] . " pts</label></td>
+                </tr>";
+      $astmt = db_op("SELECT Answer.identifier, Answer.text
+                      FROM Answer JOIN Question ON Answer.q_id = Question.id
+                      WHERE Question.exam_name = '" . test_input($exam_name) . "' AND Answer.q_id = " . $qrow["id"] . " ORDER BY identifier ASC;");
+
+      //get each answer
+      while($arow = $astmt->fetch_array(MYSQLI_ASSOC)){
+        $html .= "<tr><td><input type='radio' name='" . $qrow["id"] . "'> " . $arow["identifier"] . ". " . $arow["text"] . "</td></tr>";
+      }
+      $html .= "</table></div>";
+    }
+
+  //exam taken, show results
+  }else{
+    //get all questions for this exam
+    $qstmt = db_op("SELECT id, number, text, points, correct_answer FROM Question WHERE exam_name = '" . test_input($exam_name) . "' ORDER BY number ASC;");
+    if(!$qstmt){
+      return json_encode(array("error"=>"Unable to access database."));
+    }
+
+    //generate html for questions/answers
+    while($qrow = $qstmt->fetch_array(MYSQLI_ASSOC)){
+      $html .= "<div class='panel panel-default'>
+                  <table class='question-table table'>";
+
+      $stmt = db_op("SELECT student_answers.s_id, student_answers.q_id, student_answers.a_id, Answer.identifier
+                     FROM student_answers join Answer on student_answers.a_id = Answer.id
+                     WHERE student_answers.q_id = '" . $qrow["id"] . "'");
+      $row = $stmt->fetch_array(MYSQLI_ASSOC);
+      $student_correct = ($qrow["correct_answer"] == $row["identifier"]);
+      
+      //show question and points earned
+      $html .= "<tr class='question'>
+                  <td>" . $qrow["number"] . ". " . $qrow["text"] . "<label style='float:right'>" . ($student_correct ? $qrow["points"] : 0) . "/" . $qrow["points"] . " pts</label></td>
+                </tr>";
+
+      $astmt = db_op("SELECT Answer.id, Answer.identifier, Answer.text
+                      FROM Answer JOIN Question ON Answer.q_id = Question.id
+                      WHERE Question.exam_name = '" . test_input($exam_name) . "' AND Answer.q_id = " . $qrow["id"] . " ORDER BY identifier ASC;");
+
+      //get each answer
+      while($arow = $astmt->fetch_array(MYSQLI_ASSOC)){
+        $class = "";
+        if($arow["identifier"] == $qrow["correct_answer"]){
+          $class = "correct";
+        }else if($arow["id"] == $row["a_id"]){
+          $class = "incorrect";
+        }
+        $html .= "<tr class='$class'><td>" . $arow["identifier"] . ". " . $arow["text"] . "</td></tr>";
+      }
+      $html .= "</table></div>";
     }
   }
+
+
   return json_encode(array("html"=>$html));
 }
 
