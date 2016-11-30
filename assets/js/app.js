@@ -35,7 +35,7 @@ $(document).on("ready", function(){
           alert(data["error"]);
         }else{
           $("#content").html(data["html"]);
-          $(".navbar-nav").html("<li><a href=''>Exams</a></li><li><a id='logout'>Logout</a></li>");
+          $(".navbar-nav").html("<li><a href=''>Exams</a></li><li><a href='' id='logout'>Logout</a></li>");
           $("#login-modal").modal("hide");
         }
       },
@@ -45,7 +45,7 @@ $(document).on("ready", function(){
     });
   });
 
-  $("#logout").on("click", function(){
+  $(document).on("click", "#logout", function(){
     $.ajax({
       type: "POST",
       dataType: "json",

@@ -39,7 +39,7 @@ function get_exams(){
                     (
                     	SELECT exam_name, SUM(points) AS points FROM Question GROUP BY exam_name
                     ) AS total ON Exam.name = total.exam_name
-                    LEFT JOIN (SELECT * FROM takes WHERE takes.s_id = '1234') taken ON Exam.name = taken.exam_name
+                    LEFT JOIN (SELECT * FROM takes WHERE takes.s_id = '" . $_SESSION["user"] . "') taken ON Exam.name = taken.exam_name
                     ORDER BY date DESC");
     if(!$qstmt){
       return json_encode(array("error"=>"Unable to access database."));
