@@ -2,12 +2,17 @@
 include "functions.php";
 $action = $_POST["action"];
 
-if (isset($_SESSION["user"]) && $_SESSION["user"] != "") $user = $_SESSION["user"];
-else $user = "";
-
-if($action == "func"){
-  echo func();
+if($action == "get_exams"){
+  echo get_exams();
 }
-
+if($action == "test"){
+  echo json_encode(array("test"=>"test"));
+}
+if($action == "login"){
+  echo login($_POST["user"], $_POST["pass"]);
+}
+if($action == "logout"){
+  echo logout();
+}
 
 ?>
