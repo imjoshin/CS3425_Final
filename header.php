@@ -24,7 +24,7 @@
             <ul class="nav navbar-nav">
                 <!--<li><a href="#new-student-modal" data-toggle="modal">Add New Student</a></li>-->
                 <?php session_start(); if(isset($_SESSION["user"]) && strlen($_SESSION["user"]) > 0) : ?>
-                    <li><a href="#">Exams</a></li>
+                    <li><a href="">Exams</a></li>
                     <li><a href="#" id="logout">Logout</a></li>
                 <?php else : ?>
                     <li><a href='#login-modal' data-toggle='modal'>Student Login</a></li>

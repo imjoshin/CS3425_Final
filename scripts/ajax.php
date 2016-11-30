@@ -11,6 +11,9 @@ if($action == "get_questions"){
 if($action == "test"){
   echo json_encode(array("test"=>"test"));
 }
+if($action == "submit_exam"){
+  echo submit_exam($_POST["answers"], $_POST["exam_name"]);
+}
 if($action == "login"){
   echo login($_POST["user"], $_POST["pass"]);
 }

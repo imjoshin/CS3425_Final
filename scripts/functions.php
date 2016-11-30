@@ -3,6 +3,7 @@ require_once ('constants.php');
 require_once ('connect.php');
 ini_set("log_errors", 1);
 ini_set('display_errors', '1');
+ini_set("error_log", "/local/my_web_files/jocjohns/classdb/final/error.log");
 error_reporting(E_ALL);
 date_default_timezone_set("America/Detroit");
 
@@ -26,8 +27,10 @@ function logout(){
 }
 
 function get_exams(){
-  //if lgoged in
+  //if logged in
   if(isset($_SESSION["user"]) && strlen($_SESSION["user"]) > 0){
+    $html = "<h1 id='header'>Available Exams</h1><br/>";
+
     //get exam name, instructor name, date created, points of taken exam, and total points
     $qstmt = db_op("SELECT Exam.name AS exam_name, Instructor.name AS instructor, Exam.date_created AS date, taken.points AS points, total.points AS total
                     FROM Exam
@@ -42,7 +45,7 @@ function get_exams(){
       return json_encode(array("error"=>"Unable to access database."));
     }
 
-    $html = "<div class='panel panel-default'>
+    $html .= "<div class='panel panel-default'>
               <table id='exam-table' class='table'>";
     //add each exam to the table
     while($row = $qstmt->fetch_array(MYSQLI_ASSOC)){
@@ -64,10 +67,9 @@ function get_exams(){
 }
 
 function get_questions($exam_name){
-
+  $html = "<h1 id='header'>$exam_name</h1><br/>";
 
   $stmt = db_op("SELECT * FROM takes WHERE s_id = '" . $_SESSION["user"] . "' AND exam_name = '$exam_name'");
-  $html = "";
 
   //exam not taken
   if($stmt->num_rows != 1){
@@ -84,19 +86,34 @@ function get_questions($exam_name){
       $html .= "<tr class='question'>
                   <td>" . $qrow["number"] . ". " . $qrow["text"] . "<label style='float:right'>" . $qrow["points"] . " pts</label></td>
                 </tr>";
-      $astmt = db_op("SELECT Answer.identifier, Answer.text
+      $astmt = db_op("SELECT Answer.id, Answer.identifier, Answer.text
                       FROM Answer JOIN Question ON Answer.q_id = Question.id
                       WHERE Question.exam_name = '" . test_input($exam_name) . "' AND Answer.q_id = " . $qrow["id"] . " ORDER BY identifier ASC;");
 
       //get each answer
       while($arow = $astmt->fetch_array(MYSQLI_ASSOC)){
-        $html .= "<tr><td><input type='radio' name='" . $qrow["id"] . "'> " . $arow["identifier"] . ". " . $arow["text"] . "</td></tr>";
+        $html .= "<tr><td><input data-id='" . $arow["id"] . "' type='radio' name='" . $qrow["id"] . "'> " . $arow["identifier"] . ". " . $arow["text"] . "</td></tr>";
       }
       $html .= "</table></div>";
     }
 
+    $html .= "<button class='btn btn-success submit-btn'>Submit</button>";
+
   //exam taken, show results
   }else{
+    $rstmt = db_op("SELECT takes.points, total.points AS total
+                    FROM takes
+                    JOIN
+                    (
+                    	SELECT exam_name, SUM(points) AS points FROM Question GROUP BY exam_name
+                    ) AS total ON takes.exam_name = total.exam_name
+                    WHERE takes.exam_name = 'Simple Math'");
+    $rrow = $stmt->fetch_array(MYSQLI_ASSOC);
+
+    $html = "<h1 id='header'>$exam_name</h1><br/>";
+             //<h4>" . $rrow["points"] . "/" . $rrow["total"] . " (%)</h4><br/>";
+
+
     //get all questions for this exam
     $qstmt = db_op("SELECT id, number, text, points, correct_answer FROM Question WHERE exam_name = '" . test_input($exam_name) . "' ORDER BY number ASC;");
     if(!$qstmt){
@@ -108,12 +125,13 @@ function get_questions($exam_name){
       $html .= "<div class='panel panel-default'>
                   <table class='question-table table'>";
 
+      //get answer information
       $stmt = db_op("SELECT student_answers.s_id, student_answers.q_id, student_answers.a_id, Answer.identifier
                      FROM student_answers join Answer on student_answers.a_id = Answer.id
                      WHERE student_answers.q_id = '" . $qrow["id"] . "'");
       $row = $stmt->fetch_array(MYSQLI_ASSOC);
       $student_correct = ($qrow["correct_answer"] == $row["identifier"]);
-      
+
       //show question and points earned
       $html .= "<tr class='question'>
                   <td>" . $qrow["number"] . ". " . $qrow["text"] . "<label style='float:right'>" . ($student_correct ? $qrow["points"] : 0) . "/" . $qrow["points"] . " pts</label></td>
@@ -137,26 +155,40 @@ function get_questions($exam_name){
     }
   }
 
-
   return json_encode(array("html"=>$html));
 }
 
-/*
-FUTURE USE:
+function submit_exam($answers, $exam_name){
+  $points = 0;
+  foreach($answers as $a){
+    //separate q and a
+    $answer = explode(",", $a);
+    $q_id = $answer[0];
+    $a_id = $answer[1];
+    $stmt = db_op("SELECT Question.points, Answer.id as correct_id FROM Question
+                   JOIN Answer ON Answer.identifier = Question.correct_answer AND Answer.q_id = Question.id
+                   WHERE Question.id = $q_id");
+    if(!$stmt){
+      return json_encode(array("error"=>"Unable to access database."));
+    }
 
-function login($username, $pass){
-  $username = preg_replace('/[^\w]/', '', $username);
-  $pass = preg_replace('/[^\w]/', '', $pass);
-  $stmt = db_op("select address from users where username = '$username' and pass = '$pass'");
-  if($stmt->num_rows != 1){
-    return json_encode(array("error"=>"Invalid username or password."));
+    //create totals
+    $row = $stmt->fetch_array(MYSQLI_ASSOC);
+    if($a_id == $row["correct_id"]){
+      $points += $row["points"];
+    }
+    //insert values
+    $stmt = db_op("INSERT INTO student_answers VALUES (" . $_SESSION["user"] . ", $a_id, $q_id)");
+    if(!$stmt){
+      return json_encode(array("error"=>"Unable to submit."));
+    }
   }
-  $row = $stmt->fetch_array(MYSQLI_ASSOC);
-  $_SESSION["address"] = $row["address"];
-  $_SESSION["user"] = $username;
-  return json_encode(array());
+  //insert final score
+  $stmt = db_op("INSERT INTO takes VALUES (" . $_SESSION["user"] . ", '$exam_name', $points)");
+
+  $html = "<h4> You scored a $points.<br/>Please return to the <a href=''>exam page</a>.";
+  return json_encode(array("html"=>$html));
 }
-*/
 
 /*
   creates a connection and statement with the given query

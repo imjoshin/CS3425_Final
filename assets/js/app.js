@@ -35,7 +35,7 @@ $(document).on("ready", function(){
           alert(data["error"]);
         }else{
           $("#content").html(data["html"]);
-          $(".navbar-nav").html("<li><a href='#'>Exams</a></li><li><a id='logout'>Logout</a></li>");
+          $(".navbar-nav").html("<li><a href=''>Exams</a></li><li><a id='logout'>Logout</a></li>");
           $("#login-modal").modal("hide");
         }
       },
@@ -89,5 +89,49 @@ $(document).on("ready", function(){
         alert("An error has occured.");
       }
     });
+  });
+
+  $(document).on("click", ".submit-btn", function(){
+    var valid = true;
+    $("input:radio").each(function(){
+      var name = $(this).attr("name");
+      if($("input:radio[name="+name+"]:checked").length == 0)
+      {
+        valid = false;
+      }
+    });
+    if(!valid){
+      alert("Please fill all questions.");
+    }else{
+      var answers = [];
+      $("input:radio:checked").each(function(){
+        var name = $(this).attr("name");
+        answers.push(name + "," + $("input:radio[name="+name+"]:checked").data("id"));
+
+      });
+      console.log(answers);
+
+      $.ajax({
+        type: "POST",
+        dataType: "json",
+        url: "scripts/ajax.php",
+        data: {
+          action: "submit_exam",
+          answers: answers,
+          exam_name: $("#header").html()
+        },
+        cache: false,
+        success: function(data) {
+          if(data["error"]){
+            alert(data["error"]);
+          }else{
+            $("#content").html(data["html"]);
+          }
+        },
+        error: function(xhr, status, error) {
+          alert("An error has occured.");
+        }
+      });
+    }
   });
 });
