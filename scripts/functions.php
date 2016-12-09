@@ -14,7 +14,7 @@ session_start();
 */
 function login($user, $pass){
   //find student
-  $stmt = db_op("SELECT * FROM Student WHERE id = '" . test_input($user) . "' AND password = '" . test_input($pass) . "'");
+  $stmt = db_op("SELECT * FROM Student WHERE id = '" . test_input($user) . "' AND password = ENCODE('" . test_input($pass) . "', 'cs3425')");
   if($stmt->num_rows != 1){
     return json_encode(array("error"=>"Invalid user ID or password."));
   }
@@ -88,6 +88,7 @@ function get_exams(){
   if it has, generate answers with highlighted right/wrong answers
 */
 function get_questions($exam_name){
+  $exam_name = test_input($exam_name);
   $html = "<h1 id='header'>$exam_name</h1><br/>";
 
   $stmt = db_op("SELECT * FROM takes WHERE s_id = '" . $_SESSION["user"] . "' AND exam_name = '$exam_name'");
@@ -181,6 +182,7 @@ function get_questions($exam_name){
   submit an exam with exam_name and the given answers
 */
 function submit_exam($answers, $exam_name){
+  $exam_name = test_input($exam_name);
   $points = 0;
   foreach($answers as $a){
     //separate q and a
