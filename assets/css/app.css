@@ -11,8 +11,10 @@ h1, h3, h3 a, h4, h4 a{
 }
 #wrapper {
   min-height: 100%;
-  margin-bottom: -40px;
   padding: 10px;
+  max-width: 1000px;
+  margin: 0 auto;
+  margin-bottom: -40px;
 }
 #wrapper:after {
   content: "";
@@ -24,7 +26,8 @@ h1, h3, h3 a, h4, h4 a{
 #footer {
   text-align: center;
   background: #1B1D1E;
-  color: #FF6600;
+  color: #FFFFFF;
+  padding-top: 10px;
 }
 
 #exam-table tr{
