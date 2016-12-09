@@ -1,4 +1,6 @@
 $(document).on("ready", function(){
+
+  //Get exams when page is loaded, or get login prompt
   $.ajax({
     type: "POST",
     dataType: "json",
@@ -11,6 +13,7 @@ $(document).on("ready", function(){
       if(data["error"]){
         alert(data["error"]);
       }else{
+        //if no error, set content
         $("#content").html(data["html"]);
       }
     },
@@ -19,7 +22,9 @@ $(document).on("ready", function(){
     }
   });
 
+  //login button click
   $("#login-btn").on("click", function(){
+    //pass username and password into login
     $.ajax({
       type: "POST",
       dataType: "json",
@@ -34,7 +39,9 @@ $(document).on("ready", function(){
         if(data["error"]){
           alert(data["error"]);
         }else{
+          //if no error, set content
           $("#content").html(data["html"]);
+          //set new navbar after login
           $(".navbar-nav").html("<li><a href=''>Exams</a></li><li><a href='' id='logout'>Logout</a></li>");
           $("#login-modal").modal("hide");
         }
@@ -45,6 +52,7 @@ $(document).on("ready", function(){
     });
   });
 
+  //logout button
   $(document).on("click", "#logout", function(){
     $.ajax({
       type: "POST",
@@ -58,6 +66,7 @@ $(document).on("ready", function(){
         if(data["error"]){
           alert(data["error"]);
         }else{
+          //reload page if successful logout
           location.reload();
         }
       },
@@ -67,7 +76,9 @@ $(document).on("ready", function(){
     });
   });
 
+  //exam table row click
   $(document).on("click", "#exam-table tr:not(:first-child)", function(){
+    //get exam name
     var exam_name = $(this).data("exam");
     $.ajax({
       type: "POST",
@@ -82,6 +93,7 @@ $(document).on("ready", function(){
         if(data["error"]){
           alert(data["error"]);
         }else{
+          //if no error, set content
           $("#content").html(data["html"]);
         }
       },
@@ -91,8 +103,10 @@ $(document).on("ready", function(){
     });
   });
 
+  //exam submit button
   $(document).on("click", ".submit-btn", function(){
     var valid = true;
+    //check if each question has an answer
     $("input:radio").each(function(){
       var name = $(this).attr("name");
       if($("input:radio[name="+name+"]:checked").length == 0)
@@ -100,17 +114,19 @@ $(document).on("ready", function(){
         valid = false;
       }
     });
+    //not all questions are filled
     if(!valid){
       alert("Please fill all questions.");
     }else{
+
+      //all questions filled, get answers in an array
       var answers = [];
       $("input:radio:checked").each(function(){
         var name = $(this).attr("name");
         answers.push(name + "," + $("input:radio[name="+name+"]:checked").data("id"));
-
       });
-      console.log(answers);
 
+      //submit exam answers
       $.ajax({
         type: "POST",
         dataType: "json",
@@ -125,6 +141,7 @@ $(document).on("ready", function(){
           if(data["error"]){
             alert(data["error"]);
           }else{
+            //if no error, set content
             $("#content").html(data["html"]);
           }
         },

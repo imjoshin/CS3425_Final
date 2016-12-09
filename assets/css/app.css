@@ -1,11 +1,3 @@
-/*
-Bright: #FF6600
-Dark: #C13B00
-Light Gray: #5E6D70
-Gray: #424E4F
-Dark Gray: #1B1D1E
-*/
-
 * {
   margin: 0;
 }
@@ -14,7 +6,7 @@ html, body {
   background-color: #5E6D70;
   color: #000000;
 }
-h1{
+h1, h3, h3 a, h4, h4 a{
   color: #FFFFFF;
 }
 #wrapper {
@@ -41,12 +33,6 @@ h1{
 #exam-table tr:not(:first-child):hover{
   cursor: hand;
   background: #bbbbbb;
-}
-#exam-table tr.open{
-
-}
-#exam-table tr.closed{
-
 }
 
 .question-table tr.question{

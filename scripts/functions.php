@@ -9,6 +9,9 @@ date_default_timezone_set("America/Detroit");
 
 session_start();
 
+/*
+  check login with username and password
+*/
 function login($user, $pass){
   //find student
   $stmt = db_op("SELECT * FROM Student WHERE id = '" . test_input($user) . "' AND password = '" . test_input($pass) . "'");
@@ -20,12 +23,18 @@ function login($user, $pass){
   return get_exams();
 }
 
+/*
+  destroy session when logging out
+*/
 function logout(){
   //simply destroy the session
   session_destroy();
   return json_encode(array());
 }
 
+/*
+  get the list of exams. If the user isn't logged in, send the login prompt
+*/
 function get_exams(){
   //if logged in
   if(isset($_SESSION["user"]) && strlen($_SESSION["user"]) > 0){
@@ -72,6 +81,12 @@ function get_exams(){
   return json_encode(array("html"=>$html));
 }
 
+/*
+  get questions of the exam_name.
+  this handles if the exam has or has not been taken
+  if it hasn't been taken, generate questions with radio buttons
+  if it has, generate answers with highlighted right/wrong answers
+*/
 function get_questions($exam_name){
   $html = "<h1 id='header'>$exam_name</h1><br/>";
 
@@ -117,8 +132,6 @@ function get_questions($exam_name){
     $rrow = $stmt->fetch_array(MYSQLI_ASSOC);
 
     $html = "<h1 id='header'>$exam_name</h1><br/>";
-             //<h4>" . $rrow["points"] . "/" . $rrow["total"] . " (%)</h4><br/>";
-
 
     //get all questions for this exam
     $qstmt = db_op("SELECT id, number, text, points, correct_answer FROM Question WHERE exam_name = '" . test_input($exam_name) . "' ORDER BY number ASC;");
@@ -164,6 +177,9 @@ function get_questions($exam_name){
   return json_encode(array("html"=>$html));
 }
 
+/*
+  submit an exam with exam_name and the given answers
+*/
 function submit_exam($answers, $exam_name){
   $points = 0;
   foreach($answers as $a){
